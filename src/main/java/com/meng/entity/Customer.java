@@ -1,31 +1,24 @@
 package com.meng.entity;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 public class Customer {
-    private int id;
+    private int custId;
     private String name;
     private int age;
 
-    public int getId() {
-        return id;
-    }
-
     public Customer(int id, String name, int age) {
-        this.id = id;
+        this.custId = id;
         this.name = name;
         this.age = age;
     }
-
-    public void setId(int id) {
-        this.id = id;
+    public Customer() {
     }
+
 
     public String getName() {
         return name;
     }
 
-    public void setNane(String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
@@ -35,5 +28,22 @@ public class Customer {
 
     public void setAge(int age) {
         this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Customer{" +
+                "id=" + custId +
+                ", name='" + name + '\'' +
+                ", age=" + age +
+                '}';
+    }
+
+    public int getCustId() {
+        return custId;
+    }
+
+    public void setCustId(int custId) {
+        this.custId = custId;
     }
 }
