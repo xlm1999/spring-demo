@@ -1,12 +1,24 @@
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd
     http://www.springframework.org/schema/context
-	http://www.springframework.org/schema/context/spring-context-2.5.xsd">
+	http://www.springframework.org/schema/context/spring-context-2.5.xsd
+ http://www.springframework.org/schema/aop
+ http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+ http://www.springframework.org/schema/tx
+ http://www.springframework.org/schema/tx/spring-tx.xsd">
 
-    <context:annotation-config />
+    <context:component-scan base-package="com.meng">
+    </context:component-scan>
+
+    <context:annotation-config/>
+
+    <aop:aspectj-autoproxy/>
 
 
     <bean id="springHelloWorld" class="com.meng.SpringHelloWorld"></bean>
@@ -18,7 +30,7 @@
     </bean>
 
     <bean id="person" class="com.meng.entity.Person" autowire="byName">
-        <property name="name" value="haohao" />
+        <property name="name" value="haohao"/>
         <property name="address" value="jinan"/>
         <property name="age" value="1"/>
     </bean>
@@ -31,15 +43,114 @@
     </bean>
 
     <bean id="language" class="com.meng.entity.Language">
-        <property name="name"  value="sql"/>
+        <property name="name" value="sql"/>
     </bean>
 
-    <bean id="customerDao" class="com.meng.dao.impl.CustomerDaoImpl" >
-        <property name="dataSource" ref="dataSource" />
+    <bean id="customerDao" class="com.meng.dao.impl.CustomerDaoImpl">
+        <property name="dataSource" ref="dataSource"/>
     </bean>
 
 
+    <bean id="customer" class="com.meng.entity.Customer">
+        <constructor-arg name="age" value="12"></constructor-arg>
+        <constructor-arg name="id" value="1"></constructor-arg>
+        <constructor-arg name="name" value="haohao"></constructor-arg>
+    </bean>
 
+    <bean id="customer2" class="com.meng.entity.Customer" p:age="1">
+    </bean>
+
+    <bean id="customer22" class="com.meng.entity.Customer2"/>
+    <bean id="customer3" class="com.meng.entity.Customer3">
+        <property name="lists">
+            <list>
+            </list>
+        </property>
+        <property name="pros">
+            <props>
+                <prop key="username">root</prop>
+                <prop key="pd">123456</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="customer4" class="com.meng.entity.Customer4">
+        <property name="message" value="i like haohao"></property>
+    </bean>
+
+    <bean id="item" class="com.meng.entity.Item">
+        <property name="name" value="商品1"></property>
+        <property name="qty" value="123"></property>
+    </bean>
+
+    <bean id="customer5" class="com.meng.entity.Customer5">
+        <property name="item" value="#{item}"/>
+        <property name="itemName" value="#{item.name}"/>
+    </bean>
+
+    <bean id="customer6" class="com.meng.entity.Customer6" p:name="百度" p:url="www.baidu.com"></bean>
+
+    <bean id="hijackBeforeMethodBean" class="com.meng.aop.HijackBeforeMethod"/>
+
+    <bean id="customerServiceProxy" class="org.springframework.aop.framework.ProxyFactoryBean">
+        <property name="target" ref="customer6"/>
+        <property name="interceptorNames">
+            <list>
+                <value>hijackBeforeMethodBean</value>
+            </list>
+        </property>
+    </bean>
+
+    <bean id="logAspect" class="com.meng.aspect.LoggingAspect"></bean>
+    <bean id="customerBo" class="com.meng.dao.impl.CustomerBoImpl"/>
+
+    <aop:config>
+        <aop:aspect id="aspectLogging" ref="logAspect">
+            <aop:pointcut id="pointCutAfter" expression="execution(* com.meng.dao.CustomerBo.addCustomer(..))"/>
+            <aop:around method="logAfter" pointcut-ref="pointCutAfter"></aop:around>
+        </aop:aspect>
+    </aop:config>
+
+    <bean id="studentJDBCTemplate" class="com.meng.dao.impl.StudentJDBCTemplate">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="create"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <aop:pointcut id="createOperation" expression="execution(* com.meng.dao.impl.StudentJDBCTemplate.create(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="createOperation"/>
+    </aop:config>
+
+    <bean id="accountService" class="com.meng.service.impl.AccountServiceImpl">
+        <property name="transactionTemplate" ref="transactionTemplate"></property>
+    </bean>
+
+    <bean id="accountDao" class="com.meng.dao.impl.AccountDaoImpl">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+    <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+        <property name="transactionManager" ref="transactionManager"></property>
+    </bean>
+
+    <bean id="accountServerProxy" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+        <property name="target" ref="accountService"/>
+        <property name="transactionManager" ref="transactionManager"></property>
+        <property name="transactionAttributes">
+            <props>
+                <prop key="transfer">PROPAGATION_REQUIRED</prop>
+            </props>
+        </property>
+    </bean>
 
 </beans>
 
